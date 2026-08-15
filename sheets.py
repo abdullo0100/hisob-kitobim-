@@ -16,6 +16,8 @@ class SheetsManager:
         if creds_json_env:
             import json
             creds_info = json.loads(creds_json_env)
+            if "private_key" in creds_info and isinstance(creds_info["private_key"], str):
+                creds_info["private_key"] = creds_info["private_key"].replace("\\n", "\n")
             self.creds = Credentials.from_service_account_info(creds_info, scopes=self.scopes)
         elif os.path.exists(GOOGLE_CREDENTIALS_FILE):
             self.creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=self.scopes)

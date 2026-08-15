@@ -8,7 +8,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 
 # Google Sheets ID — spreadsheet URL-dan olinadi
 # Masalan: https://docs.google.com/spreadsheets/d/XXXXXXX/edit → XXXXXXX
-GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID", "")
+GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID") or "1eZDifvGhwNwXxluM7TZF45ktNbz46vJpycfnnwIDaiA"
 
 # Google credentials fayl yo'li
 GOOGLE_CREDENTIALS_FILE = os.getenv("GOOGLE_CREDENTIALS_FILE", "credentials.json")
