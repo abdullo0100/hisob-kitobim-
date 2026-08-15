@@ -4,9 +4,12 @@ import sys
 # Add parent directory to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from sheets import SheetsManager
+from config import TELEGRAM_BOT_TOKEN
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
 CORS(app)
@@ -18,6 +21,50 @@ def get_sm():
     if sheets_manager is None:
         sheets_manager = SheetsManager()
     return sheets_manager
+
+# Serve index.html at root
+@app.route('/')
+def index_route():
+    return send_from_directory(BASE_DIR, 'index.html')
+
+# Telegram Webhook endpoint - 24/7 cloud bot response
+@app.route('/api/webhook', methods=['POST'])
+def telegram_webhook():
+    try:
+        update = request.get_json() or {}
+        if 'message' in update:
+            chat_id = update['message']['chat']['id']
+            text = update['message'].get('text', '')
+            if text.startswith('/start'):
+                import urllib.request
+                import json
+                
+                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+                payload = {
+                    "chat_id": chat_id,
+                    "text": "👋 *Assalomu alaykum!*\n\nHisob-kitob va Sverka tizimiga xush kelibsiz.\nQuyidagi tugmani bosib Mini App-ni oching:",
+                    "parse_mode": "Markdown",
+                    "reply_markup": {
+                        "inline_keyboard": [
+                            [
+                                {
+                                    "text": "🚀 Mini App-ni Ochish",
+                                    "web_app": {"url": "https://hisob-kitobim.vercel.app"}
+                                }
+                            ]
+                        ]
+                    }
+                }
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode('utf-8'),
+                    headers={'Content-Type': 'application/json'}
+                )
+                with urllib.request.urlopen(req):
+                    pass
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route('/api/clients', methods=['GET'])
 def get_clients():
@@ -105,7 +152,6 @@ def send_report():
     try:
         import urllib.request
         import json
-        from config import TELEGRAM_BOT_TOKEN
         data = request.json or {}
         klient_id = data.get('klient_id')
         chat_id = data.get('chat_id')
