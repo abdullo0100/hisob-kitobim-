@@ -211,7 +211,6 @@
             justify-content: space-between;
             align-items: center;
             border-radius: 8px;
-
         }
 
         .client-item:hover {
@@ -224,7 +223,7 @@
 
         .sverka-summary {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 10px;
             margin-bottom: 16px;
         }
@@ -402,6 +401,11 @@
 
                 <h4>Operatsiyalar tarixi:</h4>
                 <div class="tx-list" id="sverkaTxList"></div>
+
+                <button class="btn btn-primary" id="btnSendReport" onclick="sendTelegramReport()">📤 Telegram-ga Otchot Jo'natish</button>
+                <button class="btn" onclick="goToStep('step-client')">⬅️ Ortga</button>
+            </div>
+        </div>
 
         <!-- Step 6: Edit Kirim Form -->
         <div class="step" id="step-edit-kirim">
