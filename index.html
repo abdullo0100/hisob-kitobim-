@@ -1,787 +1,1012 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hisobotlar & Sverka</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --primary: #3b82f6;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-        }
-
-        .header {
-            padding: 16px;
-            text-align: center;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .balance-card {
-            margin: 16px;
-            padding: 20px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .balance-card h2 {
-            font-size: 13px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .balance-card .amount {
-            font-size: 32px;
-            font-weight: 700;
-            color: #fff;
-            text-shadow: 0 2px 10px rgba(59, 130, 246, 0.5);
-        }
-
-        .step-container {
-            flex: 1;
-            position: relative;
-            padding: 16px;
-            overflow: hidden;
-        }
-
-        .step {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            right: 16px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            pointer-events: none;
-            transform: translateX(100%);
-        }
-
-        .step.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateX(0);
-            position: relative;
-            top: 0;
-            left: 0;
-            right: 0;
-        }
-
-        .step.previous {
-            transform: translateX(-100%);
-        }
-
-        .glass-panel {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-            margin-bottom: 16px;
-        }
-
-        h3 {
-            margin-bottom: 16px;
-            font-size: 18px;
-            color: #fff;
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: none;
-            font-size: 15px;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            border: 1px solid var(--glass-border);
-            text-align: center;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .btn-primary {
-            background: linear-gradient(to right, #3b82f6, #8b5cf6);
-            border: none;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-        }
-        
-        .btn-success {
-            background: linear-gradient(to right, #10b981, #059669);
-            border: none;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-danger {
-            background: linear-gradient(to right, #ef4444, #dc2626);
-            border: none;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-        }
-
-        .btn-warning {
-            background: linear-gradient(to right, #f59e0b, #d97706);
-            border: none;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 6px;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--glass-border);
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .input-group input:focus {
-            border-color: var(--primary);
-        }
-        
-        .client-list {
-            max-height: 280px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-        
-        .client-item {
-            padding: 14px;
-            border-bottom: 1px solid var(--glass-border);
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 8px;
-        }
-
-        .client-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .client-item:last-child {
-            border-bottom: none;
-        }
-
-        .sverka-summary {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .summary-box {
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--glass-border);
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .summary-box .title {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .summary-box .val {
-            font-size: 15px;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        .tx-list {
-            max-height: 250px;
-            overflow-y: auto;
-            margin-bottom: 16px;
-        }
-
-        .tx-item {
-            padding: 10px;
-            border-bottom: 1px solid var(--glass-border);
-            font-size: 13px;
-        }
-
-        .tx-item .top-row {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 600;
-        }
-
-        .tx-item .bot-row {
-            display: flex;
-            justify-content: space-between;
-            color: var(--text-muted);
-            font-size: 11px;
-            margin-top: 4px;
-        }
-
-        .loader {
-            display: none;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-left-color: var(--primary);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hisob-Kitob & Sverka - Moliya Boshqaruvi</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-    <div class="header">
-        <h1>📊 Hisob-kitob & Sverka</h1>
-    </div>
+  <!-- Main App Layout -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div class="brand-info">
+          <h2>Hisob-Kitob</h2>
+          <span>Moliya & Sverka</span>
+        </div>
+      </div>
 
-    <div class="balance-card">
-        <h2>Umumiy Balans</h2>
-        <div class="amount" id="balanceDisplay">0 UZS</div>
-    </div>
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Bosh Panel</span>
+        </button>
+        <button class="nav-item" data-tab="kirim">
+          <i data-lucide="arrow-down-left" class="text-success"></i>
+          <span>Kirim Qo'shish</span>
+        </button>
+        <button class="nav-item" data-tab="chiqim">
+          <i data-lucide="arrow-up-right" class="text-danger"></i>
+          <span>Chiqim Qo'shish</span>
+        </button>
+        <button class="nav-item" data-tab="sverka">
+          <i data-lucide="file-spreadsheet"></i>
+          <span>Sverka Dalolatnomasi</span>
+        </button>
+        <button class="nav-item" data-tab="telegram">
+          <i data-lucide="send" class="text-telegram"></i>
+          <span>Telegram Hisobot</span>
+        </button>
+        <button class="nav-item" data-tab="clients">
+          <i data-lucide="users"></i>
+          <span>Klientlar Boshqaruvi</span>
+        </button>
+        <button class="nav-item" data-tab="fees">
+          <i data-lucide="percent" class="text-warning"></i>
+          <span>Ushlangan Foizlar</span>
+        </button>
+        <button class="nav-item" data-tab="security">
+          <i data-lucide="shield-check" class="text-primary"></i>
+          <span>Xavfsizlik Sozlamalari</span>
+        </button>
+      </nav>
 
-    <div class="step-container">
-        <!-- Step 1: Main Menu -->
-        <div class="step active" id="step-main">
-            <div class="glass-panel">
-                <button class="btn btn-success" onclick="startFlow('kirim')">🟢 Kirim Qo'shish (+)</button>
-                <button class="btn btn-danger" onclick="startFlow('chiqim')">🔴 Chiqim Qo'shish (-)</button>
-                <button class="btn btn-warning" onclick="startFlow('sverka')">📋 Mijoz bilan Sverka (Hisobot)</button>
-            </div>
+      <div class="sidebar-footer">
+        <div class="quick-stats-widget">
+          <span class="widget-label">Jami Klientlar</span>
+          <strong id="sidebar-client-count">0 ta</strong>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay Backdrop for Mobile -->
+    <div class="sidebar-overlay hidden" id="sidebar-overlay"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left-wrapper">
+          <button type="button" class="mobile-toggle-btn" id="mobile-menu-toggle" aria-label="Menyu">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="page-title">
+            <h1 id="current-view-title">Bosh Panel</h1>
+            <p id="current-view-subtitle">Moliyaviy ko'rsatkichlar va tezkor harakatlar</p>
+          </div>
         </div>
 
-        <!-- Step 2: Select/Add Client -->
-        <div class="step" id="step-client">
-            <div class="glass-panel">
-                <h3 id="clientTitle">Mijozni tanlang</h3>
-                <div class="loader" id="clientLoader"></div>
-                <div class="client-list" id="clientList"></div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline text-primary" id="btn-open-cloud-sync" title="Bulutli Sinxronlash va Zaxira">
+            <i data-lucide="cloud"></i>
+            <span>Sinxronlash</span>
+          </button>
+          <button class="btn btn-outline text-warning" id="btn-lock-app" title="Ilovani Qulflash">
+            <i data-lucide="lock"></i>
+            <span>Qulflash</span>
+          </button>
+          <button class="btn btn-outline" id="quick-add-client-btn">
+            <i data-lucide="user-plus"></i>
+            <span>+ Klient</span>
+          </button>
+          <button class="btn btn-success" id="quick-add-kirim-btn">
+            <i data-lucide="plus-circle"></i>
+            <span>+ Kirim</span>
+          </button>
+          <button class="btn btn-danger" id="quick-add-chiqim-btn">
+            <i data-lucide="minus-circle"></i>
+            <span>- Chiqim</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-body">
+
+        <!-- ==================== 1. DASHBOARD TAB ==================== -->
+        <section id="tab-dashboard" class="tab-pane active">
+
+          <!-- Quick Actions & Recent Transactions -->
+          <div class="dashboard-grid">
+            
+            <div class="card recent-transactions-card">
+              <div class="card-header">
+                <div>
+                  <h3 class="card-title">Oxirgi Operatsiyalar</h3>
+                  <p class="card-subtitle">So'nggi kiritilgan kirim va chiqimlar</p>
+                </div>
+                <button class="btn btn-sm btn-ghost" id="view-all-sverka">
+                  Sverkaga o'tish <i data-lucide="arrow-right"></i>
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Sana</th>
+                      <th>Klient</th>
+                      <th>Turi</th>
+                      <th>Summa</th>
+                      <th>Foiz %</th>
+                      <th>Sof Summa</th>
+                      <th>Izoh</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-tx-tbody">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Client Balances Summary Sidebar -->
+            <div class="card client-summary-card">
+              <div class="card-header">
+                <h3 class="card-title">Klientlar Balansi</h3>
+                <button class="btn btn-sm btn-ghost" id="view-all-clients">Barchasi</button>
+              </div>
+              <div class="client-balance-list" id="dash-client-list">
+                <!-- Dynamic client list -->
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==================== 2. KIRIM QO'SHISH TAB ==================== -->
+        <section id="tab-kirim" class="tab-pane">
+          <div class="form-container-card">
+            <div class="form-card-header bg-success-light">
+              <div class="form-icon bg-success">
+                <i data-lucide="arrow-down-left"></i>
+              </div>
+              <div>
+                <h2>Yangi Kirim Qo'shish</h2>
+                <p>Klientdan kelgan mablag'ni va ushlanadigan foizni kiriting</p>
+              </div>
+            </div>
+
+            <form id="kirim-form" class="app-form">
+              <div class="form-grid">
                 
-                <div style="margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 15px;">
-                    <div class="input-group">
-                        <label>👤 Yangi mijoz qo'shish</label>
-                        <input type="text" id="newClientName" placeholder="Mijoz ismini kiriting">
+                <div class="form-group col-12">
+                  <label for="kirim-client-select">Klient Ismi <span class="required">*</span></label>
+                  <div class="select-with-add">
+                    <select id="kirim-client-select" required>
+                      <option value="">-- Klientni Tanlang --</option>
+                    </select>
+                    <button type="button" class="btn btn-icon btn-outline" id="btn-quick-client-kirim" title="Yangi klient qo'shish">
+                      <i data-lucide="plus"></i>
+                    </button>
+                  </div>
+                  <div id="kirim-client-balance-badge" class="client-live-balance-badge hidden"></div>
+                </div>
+
+                <div class="form-group col-6">
+                  <label for="kirim-summa-uzs">Kirim Summasi (UZS Brutto) <span class="required">*</span></label>
+                  <div class="input-with-currency">
+                    <input type="number" id="kirim-summa-uzs" placeholder="0" min="0" step="any" required>
+                    <span class="currency-badge">UZS</span>
+                  </div>
+                </div>
+
+                <div class="form-group col-6">
+                  <label for="kirim-foiz">Ushlab Qolinadigan Foiz (%)</label>
+                  <div class="input-with-suffix">
+                    <input type="number" id="kirim-foiz" placeholder="0" min="0" max="100" step="any" value="0">
+                    <span class="suffix-badge">%</span>
+                  </div>
+                </div>
+
+                <!-- Live Calculation Preview -->
+                <div class="form-group col-12">
+                  <div class="calculation-preview-box">
+                    <div class="calc-item">
+                      <span>Ushlanadigan foiz summasi:</span>
+                      <strong id="preview-fee-amount" class="text-danger">0 UZS</strong>
                     </div>
-                    <button class="btn btn-primary" onclick="addNewClient()">Qo'shish</button>
+                    <div class="calc-divider"></div>
+                    <div class="calc-item highlight">
+                      <span>Klient hisobiga o'tuvchi Sof Kirim (Netto):</span>
+                      <strong id="preview-net-amount" class="text-success">0 UZS</strong>
+                    </div>
+                  </div>
                 </div>
-                <button class="btn" style="margin-top: 5px;" onclick="goToStep('step-main')">⬅️ Ortga</button>
-            </div>
-        </div>
 
-        <!-- Step 3: Kirim Form -->
-        <div class="step" id="step-kirim">
-            <div class="glass-panel">
-                <h3>🟢 Kirim ma'lumotlari</h3>
-                <div class="input-group">
-                    <label>Summa (UZS)</label>
-                    <input type="number" id="kirimSumma" placeholder="0">
+                <div class="form-group col-12">
+                  <label for="kirim-sana">Operatsiya Sanasi <span class="required">*</span></label>
+                  <input type="datetime-local" id="kirim-sana" required>
                 </div>
-                <div class="input-group">
-                    <label>Ushlab qolinadigan foiz % (Ixtiyoriy)</label>
-                    <input type="number" step="0.01" id="kirimFoiz" placeholder="Masalan: 1.5">
-                </div>
-                <div class="input-group">
-                    <label>Kategoriya</label>
-                    <input type="text" id="kirimKategoriya" placeholder="Masalan: savdo">
-                </div>
-                <div class="input-group">
-                    <label>Izoh</label>
-                    <input type="text" id="kirimIzoh" placeholder="Izoh qoldiring">
-                </div>
-                <button class="btn btn-success" id="btnSaveKirim" onclick="saveKirim()">💾 Saqlash</button>
-                <button class="btn" onclick="goToStep('step-client')">⬅️ Ortga</button>
-            </div>
-        </div>
 
-        <!-- Step 4: Chiqim Form -->
-        <div class="step" id="step-chiqim">
-            <div class="glass-panel">
-                <h3>🔴 Chiqim ma'lumotlari</h3>
-                <div class="input-group">
-                    <label>Summa (UZS)</label>
-                    <input type="number" id="chiqimSumma" placeholder="0">
+                <div class="form-group col-12">
+                  <label for="kirim-izoh">Izoh / Izoh matni</label>
+                  <textarea id="kirim-izoh" rows="3" placeholder="Operatsiya bo'yicha izoh yoki ko'rsatma..."></textarea>
                 </div>
-                <div class="input-group">
-                    <label>Kategoriya</label>
-                    <input type="text" id="chiqimKategoriya" placeholder="Masalan: xarajat">
-                </div>
-                <div class="input-group">
-                    <label>Izoh</label>
-                    <input type="text" id="chiqimIzoh" placeholder="Izoh qoldiring">
-                </div>
-                <button class="btn btn-danger" id="btnSaveChiqim" onclick="saveChiqim()">💾 Saqlash</button>
-                <button class="btn" onclick="goToStep('step-client')">⬅️ Ortga</button>
-            </div>
-        </div>
 
-        <!-- Step 5: Sverka View -->
-        <div class="step" id="step-sverka">
-            <div class="glass-panel">
-                <h3 id="sverkaClientTitle">📋 Sverka Hujjati</h3>
+              </div>
+
+              <div class="form-actions">
+                <button type="reset" class="btn btn-outline">Tozalash</button>
+                <button type="submit" class="btn btn-success btn-lg">
+                  <i data-lucide="check-circle-2"></i>
+                  <span>Kirimni Saqlash</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ==================== 3. CHIQIM QO'SHISH TAB ==================== -->
+        <section id="tab-chiqim" class="tab-pane">
+          <div class="form-container-card">
+            <div class="form-card-header bg-danger-light">
+              <div class="form-icon bg-danger">
+                <i data-lucide="arrow-up-right"></i>
+              </div>
+              <div>
+                <h2>Yangi Chiqim Qo'shish</h2>
+                <p>Klientga berilgan yoki to'lab berilgan mablag'ni kiriting</p>
+              </div>
+            </div>
+
+            <form id="chiqim-form" class="app-form">
+              <div class="form-grid">
                 
-                <div class="sverka-summary" style="grid-template-columns: 1fr 1fr 1fr;">
-                    <div class="summary-box">
-                        <div class="title">Jami Kirim</div>
-                        <div class="val" style="color: var(--success);" id="svJamiKirim">0</div>
-                    </div>
-                    <div class="summary-box">
-                        <div class="title">Sof Kirim</div>
-                        <div class="val" style="color: var(--primary);" id="svJamiSof">0</div>
-                    </div>
-                    <div class="summary-box">
-                        <div class="title">Jami Chiqim</div>
-                        <div class="val" style="color: var(--danger);" id="svJamiChiqim">0</div>
-                    </div>
+                <div class="form-group col-12">
+                  <label for="chiqim-client-select">Klient Ismi (Kimga) <span class="required">*</span></label>
+                  <div class="select-with-add">
+                    <select id="chiqim-client-select" required>
+                      <option value="">-- Klientni Tanlang --</option>
+                    </select>
+                    <button type="button" class="btn btn-icon btn-outline" id="btn-quick-client-chiqim" title="Yangi klient qo'shish">
+                      <i data-lucide="plus"></i>
+                    </button>
+                  </div>
+                  <div id="chiqim-client-balance-badge" class="client-live-balance-badge hidden"></div>
                 </div>
 
-                <div class="glass-panel" style="padding: 12px; text-align: center; margin-bottom: 16px; background: rgba(59, 130, 246, 0.15);">
-                    <div style="font-size: 12px; color: var(--text-muted);">QOLDIQ BALANS</div>
-                    <div style="font-size: 24px; font-weight: 700; color: #fff;" id="svQoldiqBalans">0 UZS</div>
+                <div class="form-group col-6">
+                  <label for="chiqim-summa-uzs">So'mda Chiqim Summasi (UZS)</label>
+                  <div class="input-with-currency">
+                    <input type="number" id="chiqim-summa-uzs" placeholder="0" min="0" step="any" value="0">
+                    <span class="currency-badge">UZS</span>
+                  </div>
                 </div>
 
-                <h4>Operatsiyalar tarixi:</h4>
-                <div class="tx-list" id="sverkaTxList"></div>
+                <div class="form-group col-6">
+                  <label for="chiqim-summa-usd">Dollarda Chiqim Summasi ($ USD)</label>
+                  <div class="input-with-currency">
+                    <input type="number" id="chiqim-summa-usd" placeholder="0" min="0" step="any" value="0">
+                    <span class="currency-badge">$ USD</span>
+                  </div>
+                </div>
 
-                <button class="btn btn-primary" id="btnSendReport" onclick="sendTelegramReport()">📤 Telegram-ga Otchot Jo'natish</button>
-                <button class="btn" onclick="goToStep('step-client')">⬅️ Ortga</button>
+                <div class="form-group col-6">
+                  <label for="chiqim-kurs">Dollar Kursi (1 USD = ... UZS)</label>
+                  <div class="input-with-currency">
+                    <input type="number" id="chiqim-kurs" placeholder="12700" min="1" value="12700">
+                    <span class="currency-badge">UZS</span>
+                  </div>
+                </div>
+
+                <div class="form-group col-6">
+                  <label for="chiqim-sana">Operatsiya Sanasi <span class="required">*</span></label>
+                  <input type="datetime-local" id="chiqim-sana" required>
+                </div>
+
+                <div class="form-group col-12">
+                  <div class="calculation-preview-box">
+                    <div class="calc-item highlight">
+                      <span>Klient hisobidan chiqim qilinadigan Jami Summa (So'mda):</span>
+                      <strong id="preview-chiqim-total-uzs" class="text-danger">0 UZS</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group col-12">
+                  <label for="chiqim-izoh">Izoh / Chek raqami / Maqsad</label>
+                  <textarea id="chiqim-izoh" rows="3" placeholder="Chiqim bo'yicha batafsil izoh..."></textarea>
+                </div>
+
+              </div>
+
+              <div class="form-actions">
+                <button type="reset" class="btn btn-outline">Tozalash</button>
+                <button type="submit" class="btn btn-danger btn-lg">
+                  <i data-lucide="check-circle-2"></i>
+                  <span>Chiqimni Saqlash</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ==================== 4. SVERKA (RECONCILIATION) TAB ==================== -->
+        <section id="tab-sverka" class="tab-pane">
+          
+          <!-- Filters & Controls Bar -->
+          <div class="card filter-card">
+            <div class="filter-grid">
+              
+              <div class="filter-item">
+                <label for="sverka-client-select"><i data-lucide="user"></i> Klient Tanlang</label>
+                <select id="sverka-client-select">
+                  <option value="ALL">-- Barcha Klientlar --</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <label for="sverka-date-start"><i data-lucide="calendar"></i> Boshlanish Sanasi</label>
+                <input type="date" id="sverka-date-start">
+              </div>
+
+              <div class="filter-item">
+                <label for="sverka-date-end"><i data-lucide="calendar"></i> Tugash Sanasi</label>
+                <input type="date" id="sverka-date-end">
+              </div>
+
+              <div class="filter-item">
+                <label for="sverka-quick-period"><i data-lucide="clock"></i> Tezkor Davr</label>
+                <select id="sverka-quick-period">
+                  <option value="ALL">Barchasi</option>
+                  <option value="TODAY">Bugun</option>
+                  <option value="THIS_WEEK">Shu Hafta</option>
+                  <option value="THIS_MONTH" selected>Shu Oy</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <label for="sverka-search-query"><i data-lucide="search"></i> Izoh bo'yicha qidirish</label>
+                <input type="text" id="sverka-search-query" placeholder="Izoh yoki summa...">
+              </div>
+
             </div>
+
+            <div class="filter-actions-bar">
+              <button class="btn btn-outline" id="btn-reset-filters">
+                <i data-lucide="rotate-ccw"></i> Filtrlarni Tozalash
+              </button>
+              <div class="export-btns">
+                <button class="btn btn-outline" id="btn-export-csv">
+                  <i data-lucide="download"></i> CSV yuklash
+                </button>
+                <button class="btn btn-outline" id="btn-print-sverka">
+                  <i data-lucide="printer"></i> Chop etish / PDF
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sverka Totals Banner -->
+          <div class="sverka-summary-bar">
+            <div class="sverka-stat">
+              <span>Tanlangan Klient:</span>
+              <strong id="sverka-active-client-name">Barchasi</strong>
+            </div>
+            <div class="sverka-stat">
+              <span>Jami Kirim (Brutto):</span>
+              <strong id="sverka-sum-income" class="text-primary">0 UZS</strong>
+            </div>
+            <div class="sverka-stat">
+              <span>Ushlangan Foiz:</span>
+              <strong id="sverka-sum-fee" class="text-warning">0 UZS</strong>
+            </div>
+            <div class="sverka-stat">
+              <span>Sof Kirim (Netto):</span>
+              <strong id="sverka-sum-net" class="text-success">0 UZS</strong>
+            </div>
+            <div class="sverka-stat">
+              <span>Jami Chiqim:</span>
+              <strong id="sverka-sum-expense" class="text-danger">0 UZS</strong>
+            </div>
+            <div class="sverka-stat highlight-balance">
+              <span>Yakuniy Balans:</span>
+              <strong id="sverka-final-balance">0 UZS</strong>
+            </div>
+          </div>
+
+          <!-- Transaction Table & Mobile Cards -->
+          <div class="card table-card">
+            <div class="mobile-scroll-hint hidden-desktop">
+              <i data-lucide="move-horizontal"></i>
+              <span>Jadvalni chapga/o'ngga suring 👈 👉</span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table sverka-table">
+                <thead>
+                  <tr>
+                    <th>№</th>
+                    <th>Sana</th>
+                    <th>Klient</th>
+                    <th>Turi</th>
+                    <th>Brutto Summa</th>
+                    <th>Foiz %</th>
+                    <th>Foiz Summasi</th>
+                    <th>Sof Kirim</th>
+                    <th>Chiqim</th>
+                    <th>Izoh</th>
+                    <th>Amallar</th>
+                  </tr>
+                </thead>
+                <tbody id="sverka-tbody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Dynamic Mobile Card View for Phone Screens -->
+            <div class="mobile-tx-cards-list hidden-desktop" id="sverka-mobile-cards"></div>
+
+            <div class="empty-state hidden" id="sverka-empty-state">
+              <i data-lucide="inbox"></i>
+              <h3>Operatsiyalar topilmadi</h3>
+              <p>Tanlangan mezonlar bo'yicha hech qanday kirim yoki chiqim mavjud emas.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== 5. TELEGRAM HISOBOT TAB ==================== -->
+        <section id="tab-telegram" class="tab-pane">
+          <div class="telegram-grid">
+            
+            <!-- Controls Card -->
+            <div class="card tg-controls-card">
+              <div class="card-header border-bottom">
+                <div class="flex-align">
+                  <div class="icon-circle bg-telegram-light">
+                    <i data-lucide="send" class="text-telegram"></i>
+                  </div>
+                  <div>
+                    <h3 class="card-title">Telegram Hisobotini Shakllantirish</h3>
+                    <p class="card-subtitle">Klient va vaqt oralig'ini tanlang</p>
+                  </div>
+                </div>
+              </div>
+
+              <form id="tg-report-form" class="app-form p-4">
+                <div class="form-group">
+                  <label for="tg-client-select">Klientni Tanlang <span class="required">*</span></label>
+                  <select id="tg-client-select" required>
+                    <option value="">-- Klientni Tanlang --</option>
+                  </select>
+                </div>
+
+                <div class="form-grid">
+                  <div class="form-group col-6">
+                    <label for="tg-date-start">Boshlanish Sanasi</label>
+                    <input type="date" id="tg-date-start">
+                  </div>
+                  <div class="form-group col-6">
+                    <label for="tg-date-end">Tugash Sanasi</label>
+                    <input type="date" id="tg-date-end">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="tg-quick-period">Vaqt Oralig'i Shablon</label>
+                  <select id="tg-quick-period">
+                    <option value="THIS_MONTH" selected>Shu Oy Bo'yicha</option>
+                    <option value="THIS_WEEK">Shu Hafta Bo'yicha</option>
+                    <option value="TODAY">Bugun Bo'yicha</option>
+                    <option value="ALL">Barcha Vaqt Bo'yicha</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="tg-custom-note">Hisobotga Qo'shimcha Izoh (Ixtiyoriy)</label>
+                  <input type="text" id="tg-custom-note" placeholder="Masalan: Hisob-kitob tayyor, tekshirib bering...">
+                </div>
+
+                <button type="button" class="btn btn-telegram btn-block btn-lg" id="btn-generate-tg-report">
+                  <i data-lucide="refresh-cw"></i> Hisobotni Yangilash
+                </button>
+              </form>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="card tg-preview-card">
+              <div class="card-header border-bottom">
+                <h3 class="card-title"><i data-lucide="eye"></i> Telegram Xabar Ko'rinishi (Preview)</h3>
+              </div>
+              <div class="card-body">
+                <div class="telegram-chat-bubble">
+                  <pre id="tg-message-preview">Klientni tanlang va hisobot oling...</pre>
+                </div>
+              </div>
+
+              <div class="card-footer bg-light">
+                <div class="tg-action-buttons">
+                  <button class="btn btn-outline" id="btn-copy-tg-text">
+                    <i data-lucide="copy"></i> Matnni Nusxalash
+                  </button>
+                  <a href="#" target="_blank" class="btn btn-telegram" id="btn-open-telegram-share">
+                    <i data-lucide="send"></i> Telegram'da Ochish va Yuborish
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==================== 6. KLIENTLAR TAB ==================== -->
+        <section id="tab-clients" class="tab-pane">
+          <div class="clients-layout">
+            
+            <!-- Add Client Card -->
+            <div class="card add-client-card">
+              <div class="card-header">
+                <h3 class="card-title"><i data-lucide="user-plus"></i> Yangi Klient Qo'shish</h3>
+              </div>
+              <form id="client-form" class="app-form p-4">
+                <div class="form-group">
+                  <label for="client-name">Klient Ismi / Firmasi <span class="required">*</span></label>
+                  <input type="text" id="client-name" placeholder="Masalan: Alisher Vohidov" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="client-phone">Telefon Raqami (Ixtiyoriy)</label>
+                  <input type="tel" id="client-phone" placeholder="+998 90 123 45 67">
+                </div>
+
+                <div class="form-group">
+                  <label for="client-default-fee">Odatiy Foiz Stavkasi (%)</label>
+                  <input type="number" id="client-default-fee" placeholder="0" min="0" max="100" step="any" value="0">
+                </div>
+
+                <div class="form-group">
+                  <label for="client-initial-balance">Boshlang'ich Balans (UZS)</label>
+                  <input type="number" id="client-initial-balance" placeholder="0" step="any" value="0">
+                  <small class="form-text">Musbat (+) bo'lsa klient sizdan haqdor, Manfiy (-) bo'lsa qarzdor.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                  <i data-lucide="check"></i> Klientni Saqlash
+                </button>
+              </form>
+            </div>
+
+            <!-- Client Cards & List -->
+            <div class="card client-list-container">
+              <div class="card-header flex-between">
+                <h3 class="card-title"><i data-lucide="users"></i> Barcha Klientlar Ro'yxati</h3>
+                <input type="text" id="client-search-input" placeholder="Klient qidirish..." class="input-sm">
+              </div>
+              <div class="card-body">
+                <div class="clients-grid" id="clients-card-grid">
+                  <!-- Dynamic Client Cards -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ==================== 7. USHLANGAN FOIZLAR TAB ==================== -->
+        <section id="tab-fees" class="tab-pane">
+          
+          <!-- Filters & Controls Bar -->
+          <div class="card filter-card">
+            <div class="filter-grid">
+              
+              <div class="filter-item">
+                <label for="fees-client-select"><i data-lucide="user"></i> Klient Tanlang</label>
+                <select id="fees-client-select">
+                  <option value="ALL">-- Barcha Klientlar --</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <label for="fees-date-start"><i data-lucide="calendar"></i> Boshlanish Sanasi</label>
+                <input type="date" id="fees-date-start">
+              </div>
+
+              <div class="filter-item">
+                <label for="fees-date-end"><i data-lucide="calendar"></i> Tugash Sanasi</label>
+                <input type="date" id="fees-date-end">
+              </div>
+
+              <div class="filter-item">
+                <label for="fees-quick-period"><i data-lucide="clock"></i> Vaqt Oralig'i Shablon</label>
+                <select id="fees-quick-period">
+                  <option value="THIS_MONTH" selected>Shu Oy</option>
+                  <option value="THIS_WEEK">Shu Hafta</option>
+                  <option value="TODAY">Bugun</option>
+                  <option value="ALL">Barcha Vaqt</option>
+                </select>
+              </div>
+
+              <div class="filter-item">
+                <label for="fees-cost-percent-global"><i data-lucide="minus-circle"></i> Ommaviy Ayriladigan Foiz % (Tannarx)</label>
+                <input type="number" id="fees-cost-percent-global" placeholder="0" min="0" max="100" step="any" value="0">
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Fee Summary Cards -->
+          <div class="stats-grid">
+            <div class="stat-card balance-card" style="background:#ecfdf5; border-color:#a7f3d0;">
+              <div class="stat-icon" style="background:#10b981; color:white;">
+                <i data-lucide="wallet"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title" style="color:#047857;">Jami Sof Foyda (Net Profit)</span>
+                <h3 class="stat-value text-success" id="fees-total-net-profit">0 UZS</h3>
+                <span class="stat-subtext" style="color:#059669;">Foizlar ayrilgandan so'ng sizga qoladigan foyda</span>
+              </div>
+            </div>
+
+            <div class="stat-card balance-card">
+              <div class="stat-icon" style="background:#fffbe; color:#f59e0b;">
+                <i data-lucide="percent"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">Jami Ushlangan Foiz (Brutto)</span>
+                <h3 class="stat-value text-warning" id="fees-total-earned">0 UZS</h3>
+                <span class="stat-subtext">Klientlardan olingan umumiy foiz</span>
+              </div>
+            </div>
+
+            <div class="stat-card income-card">
+              <div class="stat-icon">
+                <i data-lucide="trending-up"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">Jami Kirim (Brutto)</span>
+                <h3 class="stat-value" id="fees-total-gross">0 UZS</h3>
+                <span class="stat-subtext">Umumiy kelgan tushum</span>
+              </div>
+            </div>
+
+            <div class="stat-card net-card">
+              <div class="stat-icon">
+                <i data-lucide="calculator"></i>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">O'rtacha Sof Foyda %</span>
+                <h3 class="stat-value" id="fees-avg-percent">0 %</h3>
+                <span class="stat-subtext">Ayrimlardan so'ng o'rtacha foiz</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Fee Breakdown & Table -->
+          <div class="card table-card">
+            <div class="card-header flex-between border-bottom">
+              <div>
+                <h3 class="card-title">Foizlar Ayrilmasi va Sof Foyda Tahlili</h3>
+                <p class="card-subtitle">Jadval ichida har bir qatordan ayriladigan foizni (tannarx) o'zgartirib hisoblashingiz mumkin</p>
+              </div>
+              <button class="btn btn-sm btn-outline" id="btn-export-fees-csv">
+                <i data-lucide="download"></i> Foizlar Hisobotini Yuklash (CSV)
+              </button>
+            </div>
+
+            <div class="mobile-scroll-hint hidden-desktop">
+              <i data-lucide="move-horizontal"></i>
+              <span>Jadvalni chapga/o'ngga suring 👈 👉</span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>№</th>
+                    <th>Sana</th>
+                    <th>Klient Ismi</th>
+                    <th>Brutto Kirim (UZS)</th>
+                    <th>Ushlangan Foiz %</th>
+                    <th style="background:#fef3c7; color:#92400e;">Ayriladigan Foiz % (Tannarx)</th>
+                    <th style="background:#dcfce7; color:#166534;">Sof Foyda %</th>
+                    <th>Brutto Foiz Summasi (UZS)</th>
+                    <th style="background:#dcfce7; color:#166534;">Sof Foyda Summasi (UZS)</th>
+                    <th>Sof Kirim (Klientga UZS)</th>
+                    <th>Izoh</th>
+                  </tr>
+                </thead>
+                <tbody id="fees-tbody">
+                  <!-- Dynamic Rows -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Dynamic Mobile Card View for Fees Tab -->
+            <div class="mobile-tx-cards-list hidden-desktop" id="fees-mobile-cards"></div>
+
+            <div class="empty-state hidden" id="fees-empty-state">
+              <i data-lucide="inbox"></i>
+              <h3>Ushlangan foizlar topilmadi</h3>
+              <p>Tanlangan davr va klient bo'yicha hech qanday foiz ushlanmagan.</p>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==================== 8. XAVFSIZLIK SOZLAMALARI TAB ==================== -->
+        <section id="tab-security" class="tab-pane">
+          <div class="dashboard-grid">
+            
+            <!-- Card 1: Change PIN / Password -->
+            <div class="card p-4">
+              <div class="card-header border-bottom mb-3" style="padding:0 0 0.85rem 0;">
+                <h3 class="card-title"><i data-lucide="key-round" class="text-primary"></i> Parol va PIN Kodni O'zgartirish</h3>
+                <p class="card-subtitle">Ilovaga kirish va qulfdan chiqarish paroli</p>
+              </div>
+
+              <form id="security-pin-form" class="app-form">
+                <div class="form-group">
+                  <label for="sec-old-pin">Joriy PIN Kod (Boshlang'ich: 1234)</label>
+                  <input type="password" id="sec-old-pin" maxlength="6" placeholder="****" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="sec-new-pin">Yangi PIN Kod (4 - 6 ta raqam)</label>
+                  <input type="password" id="sec-new-pin" maxlength="6" placeholder="****" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="sec-confirm-pin">Yangi PIN Kodni Qayta Kiriting</label>
+                  <input type="password" id="sec-confirm-pin" maxlength="6" placeholder="****" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                  <i data-lucide="shield-check"></i> Yangi Parolni Saqlash
+                </button>
+              </form>
+            </div>
+
+            <!-- Card 2: Biometric & Autolock Settings -->
+            <div class="card p-4">
+              <div class="card-header border-bottom mb-3" style="padding:0 0 0.85rem 0;">
+                <h3 class="card-title"><i data-lucide="scan-face" class="text-success"></i> Face ID / Barmoq Izi (Otpecatka)</h3>
+                <p class="card-subtitle">Biometrik kirish va avto-qulflash moslamalari</p>
+              </div>
+
+              <div class="security-options-list">
+                <div class="security-option-item">
+                  <div>
+                    <strong><i data-lucide="fingerprint"></i> Face ID / Barmoq Izi bilan kirish</strong>
+                    <p class="text-muted"><small>Qurilmangiz biometriyasi orqali 1 bosishda kirish</small></p>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-bio-auth" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="security-option-item mt-3">
+                  <div>
+                    <strong><i data-lucide="clock"></i> Avto-Qulflash Taymeri</strong>
+                    <p class="text-muted"><small>Ilovadan chiqilganda yoki vaqt o'tganda qulflash</small></p>
+                  </div>
+                  <select id="autolock-select" style="max-width: 180px;">
+                    <option value="IMMEDIATE" selected>Brauzer yopilganda</option>
+                    <option value="AFTER_1_MIN">1 minutdan so'ng</option>
+                    <option value="AFTER_5_MIN">5 minutdan so'ng</option>
+                    <option value="OFF">Qo'lda qulflash</option>
+                  </select>
+                </div>
+
+                <div class="mt-4 border-top pt-3 flex-between" style="flex-wrap:wrap; gap:0.5rem;">
+                  <button type="button" class="btn btn-success" id="btn-register-biometric">
+                    <i data-lucide="fingerprint"></i> Face ID / Barmoq Izini Ulang
+                  </button>
+                  <button type="button" class="btn btn-danger" id="btn-lock-now-settings">
+                    <i data-lucide="lock"></i> Ilovani Hozir Qulflash
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- EDIT TRANSACTION MODAL -->
+  <div class="modal-overlay hidden" id="edit-tx-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Operatsiyani Tahrirlash</h3>
+        <button class="modal-close" id="btn-close-edit-modal">&times;</button>
+      </div>
+      <form id="edit-tx-form" class="app-form p-4">
+        <input type="hidden" id="edit-tx-id">
+        <input type="hidden" id="edit-tx-type">
+
+        <div class="form-group">
+          <label for="edit-tx-client">Klient</label>
+          <select id="edit-tx-client" required></select>
         </div>
 
-        <!-- Step 6: Edit Kirim Form -->
-        <div class="step" id="step-edit-kirim">
-            <div class="glass-panel">
-                <h3>✏️ Kirimni Tahrirlash</h3>
-                <input type="hidden" id="editKirimId">
-                <div class="input-group">
-                    <label>Summa (UZS)</label>
-                    <input type="number" id="editKirimSumma" placeholder="0">
-                </div>
-                <div class="input-group">
-                    <label>Ushlab qolinadigan foiz %</label>
-                    <input type="number" step="0.01" id="editKirimFoiz" placeholder="0">
-                </div>
-                <div class="input-group">
-                    <label>Kategoriya</label>
-                    <input type="text" id="editKirimKategoriya" placeholder="Kategoriya">
-                </div>
-                <div class="input-group">
-                    <label>Izoh</label>
-                    <input type="text" id="editKirimIzoh" placeholder="Izoh">
-                </div>
-                <button class="btn btn-warning" id="btnSaveEditKirim" onclick="saveEditKirim()">💾 O'zgarishlarni Saqlash</button>
-                <button class="btn" onclick="goToStep('step-sverka')">⬅️ Ortga</button>
-            </div>
+        <div class="form-grid">
+          <div class="form-group col-6">
+            <label for="edit-tx-summa">Summa</label>
+            <input type="number" id="edit-tx-summa" min="0" step="any" required>
+          </div>
+          <div class="form-group col-6" id="edit-foiz-container">
+            <label for="edit-tx-foiz">Foiz %</label>
+            <input type="number" id="edit-tx-foiz" min="0" max="100" step="any">
+          </div>
         </div>
 
+        <div class="form-group">
+          <label for="edit-tx-sana">Sana</label>
+          <input type="datetime-local" id="edit-tx-sana" required>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-tx-izoh">Izoh</label>
+          <textarea id="edit-tx-izoh" rows="2"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btn-cancel-edit">Bekor Qilish</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i> O'zgarishlarni Saqlash
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <script>
-        const tg = window.Telegram ? window.Telegram.WebApp : null;
-        if(tg) tg.expand();
-        
-        let currentFlow = ''; // 'kirim', 'chiqim', 'sverka'
-        let selectedClientId = null;
-        let selectedClientName = '';
-        let currentSverkaData = null;
-        const API_BASE = '';
+  <!-- APP LOCK SCREEN OVERLAY -->
+  <div class="lock-screen-overlay" id="app-lock-screen">
+    <div class="lock-card">
+      <div class="lock-header">
+        <div class="lock-icon-circle">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <h2>Hisob-Kitob & Sverka</h2>
+        <p>Ilovaga kirish uchun PIN kodni kiriting</p>
+      </div>
 
-        function formatMoney(amount) {
-            return new Intl.NumberFormat('uz-UZ').format(amount) + ' UZS';
-        }
+      <div class="pin-display">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+      <div id="pin-error-msg" class="pin-error-text hidden">❌ PIN kod noto'g'ri, qayta kiriting</div>
 
-        async function fetchBalance() {
-            try {
-                const res = await fetch(`${API_BASE}/api/balance`);
-                const data = await res.json();
-                if(data.success) {
-                    document.getElementById('balanceDisplay').innerText = formatMoney(data.balance);
-                }
-            } catch(e) {
-                console.error("Error fetching balance:", e);
-            }
-        }
+      <div class="pin-keypad">
+        <button class="keypad-btn" data-key="1">1</button>
+        <button class="keypad-btn" data-key="2">2</button>
+        <button class="keypad-btn" data-key="3">3</button>
+        <button class="keypad-btn" data-key="4">4</button>
+        <button class="keypad-btn" data-key="5">5</button>
+        <button class="keypad-btn" data-key="6">6</button>
+        <button class="keypad-btn" data-key="7">7</button>
+        <button class="keypad-btn" data-key="8">8</button>
+        <button class="keypad-btn" data-key="9">9</button>
+        <button class="keypad-btn action-btn bio-btn" id="btn-bio-login" title="Face ID / Barmoq izi">
+          <i data-lucide="scan-face"></i>
+        </button>
+        <button class="keypad-btn" data-key="0">0</button>
+        <button class="keypad-btn action-btn" id="btn-pin-backspace" title="O'chirish">
+          <i data-lucide="delete"></i>
+        </button>
+      </div>
 
-        function goToStep(stepId) {
-            document.querySelectorAll('.step').forEach(el => {
-                if(el.classList.contains('active')) {
-                    el.classList.remove('active');
-                    el.classList.add('previous');
-                } else {
-                    el.classList.remove('previous');
-                }
-            });
-            setTimeout(() => {
-                const target = document.getElementById(stepId);
-                target.classList.remove('previous');
-                target.classList.add('active');
-            }, 50);
-        }
+      <div class="lock-footer">
+        <p class="text-muted"><small>Odatiy PIN: <strong>1234</strong></small></p>
+        <button type="button" class="btn btn-link btn-sm text-primary" id="btn-open-pin-modal">
+          <i data-lucide="key-round"></i> PIN Kodni O'zgartirish
+        </button>
+      </div>
+    </div>
+  </div>
 
-        function startFlow(type) {
-            currentFlow = type;
-            loadClients();
-            goToStep('step-client');
-        }
+  <!-- CHANGE PIN MODAL -->
+  <div class="modal-overlay hidden" id="change-pin-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i data-lucide="key-round"></i> PIN Kodni O'zgartirish</h3>
+        <button class="modal-close" id="btn-close-pin-modal">&times;</button>
+      </div>
+      <form id="change-pin-form" class="app-form p-4">
+        <div class="form-group">
+          <label for="old-pin-input">Joriy PIN Kod (Odatiy: 1234)</label>
+          <input type="password" id="old-pin-input" maxlength="6" required placeholder="****">
+        </div>
 
-        async function loadClients() {
-            const loader = document.getElementById('clientLoader');
-            const list = document.getElementById('clientList');
-            loader.style.display = 'block';
-            list.innerHTML = '';
+        <div class="form-group">
+          <label for="new-pin-input">Yangi PIN Kod (4 - 6 raqam)</label>
+          <input type="password" id="new-pin-input" maxlength="6" required placeholder="****">
+        </div>
+
+        <div class="form-group">
+          <label for="confirm-pin-input">Yangi PIN Kodni Qayta Kiriting</label>
+          <input type="password" id="confirm-pin-input" maxlength="6" required placeholder="****">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btn-cancel-pin-modal">Bekor Qilish</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="check"></i> Yangi PINni Saqlash
+          </button>
+        </div>
+      </form>
+    </div>
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- CLOUD SYNC & BACKUP MODAL -->
+  <div class="modal-overlay hidden" id="cloud-sync-modal">
+    <div class="modal-card" style="max-width:580px;">
+      <div class="modal-header border-bottom">
+        <h3 class="card-title"><i data-lucide="cloud" class="text-primary"></i> Bulutli Sinxronizatsiya va Zaxira</h3>
+        <button class="modal-close" id="btn-close-cloud-modal">&times;</button>
+      </div>
+
+      <div class="p-4">
+        <!-- Option 2 (PRIMARY): Cloud Sync Key -->
+        <div class="card p-3 mb-4" style="background:#f0fdf4; border:2px solid #22c55e;">
+          <div class="flex-between mb-2">
+            <h4 style="font-size:1.05rem; font-weight:800; color:#15803d; margin:0;"><i data-lucide="cloud-lightning" class="text-success"></i> ⚡ Avtomatik Real-Time Bulutli Baza</h4>
+            <span class="badge badge-success" id="cloud-sync-status-badge">● FAOL</span>
+          </div>
+          <p class="text-muted" style="font-size:0.83rem; color:#166534; margin-bottom:0.85rem;">Har qanday telefonda yoki noutbukda bir xil <strong>Maxfiy Baza Kaliti</strong>ni kiriting. Ma'lumotlar fonda avtomatik sinxronlanadi!</p>
+
+          <form id="cloud-sync-form" class="app-form">
+            <div class="form-group mb-2">
+              <label for="cloud-sync-key-input" style="color:#15803d; font-weight:700;">Maxfiy Sinxronlash Kalitingiz (Sync Key)</label>
+              <div class="flex-align" style="gap:0.5rem;">
+                <input type="text" id="cloud-sync-key-input" placeholder="Masalan: mening_baza_2026" style="font-family:monospace; font-weight:700; font-size:1.05rem;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-generate-cloud-key" title="Yangi Kalit Yaratish">
+                  <i data-lucide="sparkles"></i> Yangi Kalit
+                </button>
+              </div>
+            </div>
+
+            <div class="flex-between mt-3">
+              <button type="button" class="btn btn-success btn-sm" id="btn-sync-now">
+                <i data-lucide="refresh-cw"></i> Hozir Sinxronlash (Sync Now)
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i data-lucide="save"></i> Kalitni Saqlash va Yoqish
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Option 1 (SECONDARY): File Backup & Restore -->
+        <div class="card p-3" style="background:#f8fafc; border:1px solid var(--border-color);">
+          <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:0.25rem;"><i data-lucide="hard-drive-download" class="text-primary"></i> Qo'lda Zaxira Faylini Saqlash va Tiklash</h4>
+          <p class="text-muted" style="font-size:0.82rem; margin-bottom:0.85rem;">Barcha ma'lumotlarni 1 ta `.json` fayl qilib kompyuteringizga yuklab oling.</p>
+          
+          <div class="flex-align" style="gap:0.75rem; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-export-json-backup">
+              <i data-lucide="download"></i> Zaxira Faylini Saqlash (.json)
+            </button>
             
-            try {
-                const res = await fetch(`${API_BASE}/api/clients`);
-                const data = await res.json();
-                
-                loader.style.display = 'none';
-                if(data.success && data.clients) {
-                    data.clients.forEach(c => {
-                        const div = document.createElement('div');
-                        div.className = 'client-item';
-                        div.innerHTML = `<span>👤 <strong>${c.ism}</strong></span> <span>➡️</span>`;
-                        div.onclick = () => selectClient(c.id, c.ism);
-                        list.appendChild(div);
-                    });
-                }
-            } catch(e) {
-                loader.style.display = 'none';
-                if(tg) tg.showAlert("Mijozlarni yuklashda xatolik!");
-            }
-        }
+            <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0;">
+              <i data-lucide="upload"></i> Zaxirani Tiklash (.json)
+              <input type="file" id="input-import-json-backup" accept=".json" style="display:none;">
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        async function addNewClient() {
-            const nameInput = document.getElementById('newClientName');
-            const name = nameInput.value.trim();
-            if(!name) {
-                if(tg) tg.showAlert("Ism kiritish majburiy!");
-                return;
-            }
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/clients`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ism: name})
-                });
-                const data = await res.json();
-                if(data.success) {
-                    nameInput.value = '';
-                    selectClient(data.client.id, data.client.ism);
-                }
-            } catch(e) {
-                if(tg) tg.showAlert("Xatolik yuz berdi!");
-            }
-        }
-
-        function selectClient(id, name) {
-            selectedClientId = id;
-            selectedClientName = name;
-            if(currentFlow === 'kirim') {
-                goToStep('step-kirim');
-            } else if(currentFlow === 'chiqim') {
-                goToStep('step-chiqim');
-            } else if(currentFlow === 'sverka') {
-                loadSverka(id);
-            }
-        }
-
-        async function loadSverka(clientId) {
-            const list = document.getElementById('sverkaTxList');
-            list.innerHTML = '<div style="text-align:center; padding: 20px;">Yuklanmoqda...</div>';
-            goToStep('step-sverka');
-
-            try {
-                const res = await fetch(`${API_BASE}/api/sverka/${clientId}`);
-                const data = await res.json();
-                if(data.success && data.sverka) {
-                    currentSverkaData = data.sverka;
-                    const sv = data.sverka;
-                    document.getElementById('sverkaClientTitle').innerText = `📋 Sverka: ${sv.klient_name}`;
-                    document.getElementById('svJamiKirim').innerText = formatMoney(sv.jami_kirim);
-                    document.getElementById('svJamiSof').innerText = formatMoney(sv.jami_sof_kirim);
-                    document.getElementById('svJamiChiqim').innerText = formatMoney(sv.jami_chiqim);
-                    document.getElementById('svQoldiqBalans').innerText = formatMoney(sv.qoldiq_balans);
-
-                    if(!sv.yozuvlar || sv.yozuvlar.length === 0) {
-                        list.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 15px;">Operatsiyalar topilmadi</div>';
-                    } else {
-                        list.innerHTML = sv.yozuvlar.slice().reverse().map(y => `
-                            <div class="tx-item">
-                                <div class="top-row">
-                                    <span style="color: ${y.turi === 'kirim' ? 'var(--success)' : 'var(--danger)'}">
-                                        ${y.turi === 'kirim' ? '🟢 Kirim' : '🔴 Chiqim'}
-                                    </span>
-                                    <span>
-                                        ${formatMoney(y.summa)}
-                                        ${y.turi === 'kirim' ? `<button onclick="openEditKirim(${y.id}, ${y.summa}, ${y.foiz || 0}, '${(y.kategoriya || '').replace(/'/g, "\\'")}', '${(y.izoh || '').replace(/'/g, "\\'")}')" style="background:none; border:none; color: var(--warning); cursor:pointer; margin-left: 8px; font-size:14px;" title="Tahrirlash">✏️</button>` : ''}
-                                    </span>
-                                </div>
-                                <div class="bot-row">
-                                    <span>${y.sana} ${y.vaqt}</span>
-                                    <span>${y.kategoriya || ''}</span>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-                }
-            } catch(e) {
-                list.innerHTML = '<div style="text-align:center; color: var(--danger);">Xatolik yuz berdi!</div>';
-            }
-        }
-
-        function openEditKirim(id, summa, foiz, kategoriya, izoh) {
-            document.getElementById('editKirimId').value = id;
-            document.getElementById('editKirimSumma').value = summa;
-            document.getElementById('editKirimFoiz').value = foiz;
-            document.getElementById('editKirimKategoriya').value = kategoriya;
-            document.getElementById('editKirimIzoh').value = izoh;
-            goToStep('step-edit-kirim');
-        }
-
-        async function saveEditKirim() {
-            const id = document.getElementById('editKirimId').value;
-            const summa = document.getElementById('editKirimSumma').value;
-            const foiz = document.getElementById('editKirimFoiz').value;
-            const kategoriya = document.getElementById('editKirimKategoriya').value;
-            const izoh = document.getElementById('editKirimIzoh').value;
-
-            if(!id || !summa) {
-                if(tg) tg.showAlert("Summani kiriting!");
-                return;
-            }
-
-            const btn = document.getElementById('btnSaveEditKirim');
-            btn.innerText = "Saqlanmoqda...";
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`${API_BASE}/api/kirim/edit`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        id: parseInt(id),
-                        summa: parseFloat(summa),
-                        foiz: parseFloat(foiz || 0),
-                        kategoriya: kategoriya,
-                        izoh: izoh
-                    })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    if(tg) {
-                        tg.showAlert("✅ Kirim o'zgarmalari muvaffaqiyatli saqlandi!", () => {
-                            fetchBalance();
-                            loadSverka(selectedClientId);
-                        });
-                    } else {
-                        fetchBalance();
-                        loadSverka(selectedClientId);
-                    }
-                } else {
-                    if(tg) tg.showAlert("Xatolik: " + data.error);
-                }
-            } catch(e) {
-                if(tg) tg.showAlert("Tizim xatoligi!");
-            } finally {
-                btn.innerText = "💾 O'zgarishlarni Saqlash";
-                btn.disabled = false;
-            }
-        }
-
-        async function sendTelegramReport() {
-            const chatId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
-            if(!chatId) {
-                alert("Telegram chat ID aniqlanmadi! Bot orqali kiring.");
-                return;
-            }
-
-            const btn = document.getElementById('btnSendReport');
-            btn.innerText = "Jo'natilmoqda...";
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`${API_BASE}/api/send-report`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        klient_id: selectedClientId,
-                        chat_id: chatId
-                    })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    if(tg) tg.showAlert("✅ Hisobot Telegram botingizga jo'natildi!");
-                } else {
-                    if(tg) tg.showAlert("Xatolik: " + data.error);
-                }
-            } catch(e) {
-                if(tg) tg.showAlert("Tizim xatoligi!");
-            } finally {
-                btn.innerText = "📤 Telegram-ga Otchot Jo'natish";
-                btn.disabled = false;
-            }
-        }
-
-        async function saveKirim() {
-            const summa = document.getElementById('kirimSumma').value;
-            const foiz = document.getElementById('kirimFoiz').value;
-            const kategoriya = document.getElementById('kirimKategoriya').value;
-            const izoh = document.getElementById('kirimIzoh').value;
-            
-            if(!summa) {
-                if(tg) tg.showAlert("Summani kiriting!");
-                return;
-            }
-            
-            const btn = document.getElementById('btnSaveKirim');
-            btn.innerText = "Saqlanmoqda...";
-            btn.disabled = true;
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/kirim`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        klient_id: selectedClientId,
-                        summa: parseFloat(summa),
-                        foiz: parseFloat(foiz || 0),
-                        kategoriya: kategoriya,
-                        izoh: izoh
-                    })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    if(tg) {
-                        tg.showAlert("Kirim muvaffaqiyatli saqlandi!", () => {
-                            document.getElementById('kirimSumma').value = '';
-                            document.getElementById('kirimFoiz').value = '';
-                            document.getElementById('kirimKategoriya').value = '';
-                            document.getElementById('kirimIzoh').value = '';
-                            fetchBalance();
-                            goToStep('step-main');
-                        });
-                    }
-                } else {
-                    if(tg) tg.showAlert("Xatolik: " + data.error);
-                }
-            } catch(e) {
-                if(tg) tg.showAlert("Tizim xatoligi!");
-            } finally {
-                btn.innerText = "💾 Saqlash";
-                btn.disabled = false;
-            }
-        }
-
-        async function saveChiqim() {
-            const summa = document.getElementById('chiqimSumma').value;
-            const kategoriya = document.getElementById('chiqimKategoriya').value;
-            const izoh = document.getElementById('chiqimIzoh').value;
-            
-            if(!summa) {
-                if(tg) tg.showAlert("Summani kiriting!");
-                return;
-            }
-            
-            const btn = document.getElementById('btnSaveChiqim');
-            btn.innerText = "Saqlanmoqda...";
-            btn.disabled = true;
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/chiqim`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        klient_id: selectedClientId,
-                        summa: parseFloat(summa),
-                        kategoriya: kategoriya,
-                        izoh: izoh
-                    })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    if(tg) {
-                        tg.showAlert("Chiqim muvaffaqiyatli saqlandi!", () => {
-                            document.getElementById('chiqimSumma').value = '';
-                            document.getElementById('chiqimKategoriya').value = '';
-                            document.getElementById('chiqimIzoh').value = '';
-                            fetchBalance();
-                            goToStep('step-main');
-                        });
-                    }
-                } else {
-                    if(tg) tg.showAlert("Xatolik: " + data.error);
-                }
-            } catch(e) {
-                if(tg) tg.showAlert("Tizim xatoligi!");
-            } finally {
-                btn.innerText = "💾 Saqlash";
-                btn.disabled = false;
-            }
-        }
-
-        // Init
-        fetchBalance();
-        if(tg) tg.ready();
-    </script>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
